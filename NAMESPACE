@@ -1,1 +1,6 @@
 exportPattern("^[[:alpha:]]+")
+import(tidyverse)
+import(rvest)
+import(stringr)
+import(xml2)
+import(httr)
