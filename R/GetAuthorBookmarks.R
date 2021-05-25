@@ -33,9 +33,32 @@ GetAuthorBookmarks <- function(input) {
   ### But Works are Preceded by the string "do not cache"
   ### Above function splits into DF by that string
 
+
+
+
+
   bookmarks_info$raw_text <- strsplits(bookmarks,
                                        bookmarks_info$Titles)[-1]
 
+  ### Get Works IDs
+  works_ids <- bookmarks_html %>%
+    html_elements(css = "h4 a") %>%
+    html_attr("href") %>%
+    data.frame()
+
+  colnames(works_ids) <- "works_ids"
+
+  works_ids <- works_ids %>%
+    filter(grepl("/works/", works_ids)) %>%
+    mutate(works_ids = gsub("/works/", "", works_ids))
+
+  bookmarks_info$work_id <- works_ids$works_ids
+
+  ### Get Works URLs
+
+  bookmarks_info$work_url <- paste0("https://archiveofourown.org/works/", bookmarks_info$work_id)
+
+  ## Check for bookmarks if they even exist
 
   if (0 == sub(".*Bookmarks *(.*?) *Collections.*",
                "\\1",
@@ -77,8 +100,8 @@ GetAuthorBookmarks <- function(input) {
         str_match(bookmarks_info$raw_text[i], "Comments\\:\\n(.*?)\\\n")[1, 2]
 
       ### Hits Count
-      works_info$hits[i] <-
-        str_match(works_info$raw_text[i], "Hits\\:\\n(.*?)\\\n")[1, 2]
+      bookmarks_info$hits[i] <-
+        str_match(bookmarks_info$raw_text[i], "Hits\\:\\n(.*?)\\\n")[1, 2]
 
       ### Last Updated
       bookmarks_info$last_updated[i] <-

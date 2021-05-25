@@ -38,6 +38,28 @@ GetAuthorWorks <- function(input) {
                                      html_text2(),
                                    works_info$Titles)[-1]
 
+
+
+  ### Get Works IDs and URLs
+  works_ids <- author_works %>%
+    html_elements(css = "h4 a") %>%
+    html_attr("href") %>%
+    data.frame()
+
+  colnames(works_ids) <- "works_ids"
+
+  works_ids <- works_ids %>%
+    filter(grepl("/works/", works_ids)) %>%
+    mutate(works_ids = gsub("/works/", "", works_ids))
+
+  works_info$work_id <- works_ids$works_ids
+
+
+  ### Get Works URLs
+
+  works_info$work_url <- paste0("https://archiveofourown.org/works/", works_info$work_id)
+
+
   ### Big For-Loop for capturing all Works Summary Data
 
 
