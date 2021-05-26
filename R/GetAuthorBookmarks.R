@@ -37,26 +37,6 @@ GetAuthorBookmarks <- function(input) {
 
 
 
-  bookmarks_info$raw_text <- strsplits(bookmarks,
-                                       bookmarks_info$Titles)[-1]
-
-  ### Get Works IDs
-  works_ids <- bookmarks_html %>%
-    html_elements(css = "h4 a") %>%
-    html_attr("href") %>%
-    data.frame()
-
-  colnames(works_ids) <- "works_ids"
-
-  works_ids <- works_ids %>%
-    filter(grepl("/works/", works_ids)) %>%
-    mutate(works_ids = gsub("/works/", "", works_ids))
-
-  bookmarks_info$work_id <- works_ids$works_ids
-
-  ### Get Works URLs
-
-  bookmarks_info$work_url <- paste0("https://archiveofourown.org/works/", bookmarks_info$work_id)
 
   ## Check for bookmarks if they even exist
 
@@ -74,7 +54,32 @@ GetAuthorBookmarks <- function(input) {
                  )
                ))) {
     "N/A"
-  } else{
+  } else {
+    bookmarks_info$raw_text <- strsplits(bookmarks,
+                                         "by do not cache")[-1]
+
+    ### Get Works IDs
+    works_ids <- bookmarks_html %>%
+      html_elements(css = "h4 a") %>%
+      html_attr("href") %>%
+      data.frame()
+
+    colnames(works_ids) <- "works_ids"
+
+    works_ids <- works_ids %>%
+      filter(grepl("/works/", works_ids)) %>%
+      mutate(works_ids = gsub("/works/", "", works_ids))
+
+    bookmarks_info$work_id <- works_ids$works_ids
+
+    ### Get Works URLs
+
+    bookmarks_info$work_url <-
+      paste0("https://archiveofourown.org/works/",
+             bookmarks_info$work_id)
+
+
+
     ### Big For-Loop for capturing all Bookmarks Summary Data
     for (i in 1:nrow(bookmarks_info)) {
       ### Word Count

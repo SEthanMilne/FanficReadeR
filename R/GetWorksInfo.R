@@ -1,6 +1,8 @@
-GetWorkInfo <- function(input){
+
+
+GetWorkInfo <- function(input) {
   work <- GET(
-    input,
+    WorkURL(input),
     user_agent(
       "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.93 Safari/537.36"
     )
@@ -43,6 +45,10 @@ GetWorkInfo <- function(input){
   work_info$last_updated <-
     str_match(raw_text, "Updated\\:\\n(.*?)\\\n")[, 2]
 
+  ### Completed
+  work_info$completed <-
+    str_match(raw_text, "Completed\\:\\n(.*?)\\\n")[, 2]
+
   ### (In)Complete Status
   work_info$status <- if ("?" == sub(".*/",
                                      "",
@@ -75,3 +81,5 @@ GetWorkInfo <- function(input){
   ### Display the work info table
   work_info
 }
+
+#GetWorkInfo("https://archiveofourown.org/works/28747785")

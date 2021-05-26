@@ -1,6 +1,6 @@
-GetChapterIndex <- function(input){
+GetChapterIndex <- function(input) {
   index <- GET(
-    paste0(input, "/navigate"),
+    paste0(WorkURL(input), "/navigate"),
     user_agent(
       "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.93 Safari/537.36"
     )
@@ -18,11 +18,11 @@ GetChapterIndex <- function(input){
   colnames(chapter_info) <- "title"
 
   end <- nrow(chapter_info) - 1
-  chapter_info <- chapter_info[2:end,1] %>% data.frame()
+  chapter_info <- chapter_info[2:end, 1] %>% data.frame()
 
   colnames(chapter_info) <- "title"
 
-  chapter_info <- titles %>%
+  chapter_info <- chapter_info %>%
     mutate(title = paste0("START", title, "END")) %>% ### adding markers for start/end
     mutate(
       chapter = str_match(title, "START(.*?)\\.")[, 2],
@@ -30,9 +30,11 @@ GetChapterIndex <- function(input){
     ) ### extracting chapter number and date
 
 
-  for (i in 1:nrow(chapter_info)){
-    chapter_info[i,1] <- gsub(paste0("START", chapter_info[i,2], "."), "", chapter_info[i,1])
-    chapter_info[i,1] <- gsub(paste0("\\(", chapter_info[i,3], "\\)END"), "", chapter_info[i,1])
+  for (i in 1:nrow(chapter_info)) {
+    chapter_info[i, 1] <-
+      gsub(paste0("START", chapter_info[i, 2], "."), "", chapter_info[i, 1])
+    chapter_info[i, 1] <-
+      gsub(paste0("\\(", chapter_info[i, 3], "\\)END"), "", chapter_info[i, 1])
   }
 
   ### Get Chapter URLS

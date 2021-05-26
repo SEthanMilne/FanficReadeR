@@ -190,7 +190,27 @@ GetAuthorWorks <- function(input) {
   ### But Works are Preceded by the string "do not cache"
   ### Above function splits into DF by that string
   
-  works_info$raw_text <- strsplits(author_works %>%
+  
+
+  ### Big For-Loop for capturing all Works Summary Data
+  
+  
+  if (0 == sub(".*Works *(.*?) *Series.*", "\\1",
+               gsub(
+                 "\n",
+                 " ",
+                 gsub(
+                   "[[:punct:]]",
+                   "",
+                   author_works %>%
+                   html_element(css = "#dashboard") %>%
+                   html_text2()
+                 )
+               ))) {
+    "N/A"
+  } else{
+    
+    works_info$raw_text <- strsplits(author_works %>%
                                      html_element(css = "#main") %>%
                                      html_text2(),
                                    works_info$Titles)[-1]
@@ -217,23 +237,6 @@ works_info$work_id <- works_ids$works_ids
 works_info$work_url <- paste0("https://archiveofourown.org/works/", works_info$work_id)
 
 
-  ### Big For-Loop for capturing all Works Summary Data
-  
-  
-  if (0 == sub(".*Works *(.*?) *Series.*", "\\1",
-               gsub(
-                 "\n",
-                 " ",
-                 gsub(
-                   "[[:punct:]]",
-                   "",
-                   author_works %>%
-                   html_element(css = "#dashboard") %>%
-                   html_text2()
-                 )
-               ))) {
-    "N/A"
-  } else{
     for (i in 1:nrow(works_info)) {
       ### Word Count
       works_info$word_count[i] <-
@@ -341,9 +344,30 @@ GetAuthorBookmarks <- function(input) {
   
 
 
+
+
+## Check for bookmarks if they even exist
   
+  if (0 == sub(".*Bookmarks *(.*?) *Collections.*",
+               "\\1",
+               gsub(
+                 "\n",
+                 " ",
+                 gsub(
+                   "[[:punct:]]",
+                   "",
+                   bookmarks_html %>%
+                   html_element(css = "#dashboard") %>%
+                   html_text2()
+                 )
+               ))) {
+    "N/A"
+  } else {
+    
+    
+      
   bookmarks_info$raw_text <- strsplits(bookmarks,
-                                       bookmarks_info$Titles)[-1]
+                                       "by do not cache")[-1]
   
 ### Get Works IDs
 works_ids <- bookmarks_html %>%
@@ -363,23 +387,8 @@ bookmarks_info$work_id <- works_ids$works_ids
 
 bookmarks_info$work_url <- paste0("https://archiveofourown.org/works/", bookmarks_info$work_id)
 
-## Check for bookmarks if they even exist
-  
-  if (0 == sub(".*Bookmarks *(.*?) *Collections.*",
-               "\\1",
-               gsub(
-                 "\n",
-                 " ",
-                 gsub(
-                   "[[:punct:]]",
-                   "",
-                   bookmarks_html %>%
-                   html_element(css = "#dashboard") %>%
-                   html_text2()
-                 )
-               ))) {
-    "N/A"
-  } else{
+
+
     ### Big For-Loop for capturing all Bookmarks Summary Data
     for (i in 1:nrow(bookmarks_info)) {
       ### Word Count
@@ -481,7 +490,74 @@ author_works <- GET(
     read_html()
 ```
 
-```{r}
 
+
+# TESTING AREA
+
+## GetAuthorInfo
+
+Results for both should be: an 8x2 table with all results filled in
+
+### With Name
+```{r}
+GetAuthorInfo("AmandaWilkie")
 ```
+
+### With URL
+```{r}
+GetAuthorInfo("https://archiveofourown.org/users/AmandaWilkie/pseuds/AmandaWilkie/bookmarks")
+```
+
+
+## GetAuthorBookmarks
+
+### Author With Bookmarks
+
+Result for both should be: A 14x18 table with all details filled in
+
+#### Using Name
+```{r}
+GetAuthorBookmarks("yohjikammy")
+```
+
+
+#### Using URL
+```{r}
+GetAuthorBookmarks("https://archiveofourown.org/users/yohjikammy/pseuds/yohjikammy")
+```
+
+
+### Author Without Bookmarks
+
+Result for both should be: "N/A"
+
+#### Using Name
+```{r}
+GetAuthorBookmarks("AmandaWilkie")
+```
+
+#### Using URL
+```{r}
+GetAuthorBookmarks("https://archiveofourown.org/users/AmandaWilkie/pseuds/AmandaWilkie/bookmarks")
+```
+
+
+
+## GetAuthorWorks
+
+### Authors with Works
+
+Results for both should be: a 6x18 table with all details filled in
+
+#### Using Name
+```{r}
+GetAuthorWorks("Sataroni")
+```
+
+
+#### Using URL
+```{r}
+GetAuthorWorks("https://archiveofourown.org/users/Sataroni/pseuds/Sataroni")
+```
+
 

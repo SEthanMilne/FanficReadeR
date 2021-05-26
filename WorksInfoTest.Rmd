@@ -29,86 +29,103 @@ strsplits <- function(x, splits, ...)
 }
 ```
 
+# WorkURL
+```{r}
+WorkURL <- function(x){
 
-## Get Works Info
+if (grepl("\\/chapters\\/", x )) {
+  gsub(
+  "\\/chapters\\/[0-9]*", "", x
+)
+} else {
+  x
+}
+}
+```
+
+## Get Work Info
 ```{r}
 
-GetWorkInfo <- function(input){
-work <- GET(
-    input,
+GetWorkInfo <- function(input) {
+  work <- GET(
+    WorkURL(input),
     user_agent(
       "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.93 Safari/537.36"
     )
   ) %>%
     read_html()
-
-raw_text <- work %>%
-  html_element(css = ".group") %>%
-  html_text2()
-
-work_info <- data.frame(matrix(nrow = 1, ncol = 0))
-
-### Word Count
-work_info$word_count <-
-  str_match(raw_text, "Words\\:\\n(.*?)\\\n")[, 2]
-
-### Language
-work_info$language <-
-  str_match(raw_text, "Language\\:\\n(.*?)\\\n")[, 2]
-
-### Chapter Count
-work_info$chapters <-
-  sub("/.*",
-      "",
-      str_match(raw_text, "Chapters\\:\\n(.*?)\\\n")[, 2])
-
-### Kudos Count
-work_info$kudos <-
-  str_match(raw_text, "Kudos\\:\\n(.*?)\\\n")[, 2]
-
-### Comments Count
-work_info$comments <-
-  str_match(raw_text, "Comments\\:\\n(.*?)\\\n")[, 2]
-
-### Hits Count
-work_info$hits <-
-  str_match(gsub("\n", " ", raw_text), "Hits\\:(.*)")[, 2]
-
-### Last Updated
-work_info$last_updated <-
-  str_match(raw_text, "Updated\\:\\n(.*?)\\\n")[, 2]
-
-### (In)Complete Status
-work_info$status <- if ("?" == sub(".*/",
-                                   "",
-                                   str_match(raw_text, "Chapters\\:\\n(.*?)\\\n")[, 2])) {
-  "Ongoing"
-} else {
-  "Complete"
-}
-
-### Bookmarks Count
-work_info$bookmarks <-
-  str_match(raw_text, "Bookmarks\\:\\n(.*?)\\\n")[, 2]
-
-### Relationships
-work_info$relationships <-
-  str_match(gsub("\n", " ", raw_text), "Relationships\\:(.*?)Characters")[, 2]
-
-### Content Warnings
-work_info$warnings <-
-  str_match(raw_text, "Archive Warning\\:\\n(.*?)\\\n")[, 2]
-
-### Age Category (Mature, Teens, General)
-work_info$age_category <-
-  str_match(raw_text, "Rating\\:\\n(.*?)\\\n")[, 2]
-
-### Fandoms
-work_info$fandoms <-
-  str_match(gsub("\n", " ", raw_text), "Fandoms\\:(.*?)Relationships")[, 2]
-
-### Display the work info table
-work_info
+  
+  raw_text <- work %>%
+    html_element(css = ".group") %>%
+    html_text2()
+  
+  work_info <- data.frame(matrix(nrow = 1, ncol = 0))
+  
+  ### Word Count
+  work_info$word_count <-
+    str_match(raw_text, "Words\\:\\n(.*?)\\\n")[, 2]
+  
+  ### Language
+  work_info$language <-
+    str_match(raw_text, "Language\\:\\n(.*?)\\\n")[, 2]
+  
+  ### Chapter Count
+  work_info$chapters <-
+    sub("/.*",
+        "",
+        str_match(raw_text, "Chapters\\:\\n(.*?)\\\n")[, 2])
+  
+  ### Kudos Count
+  work_info$kudos <-
+    str_match(raw_text, "Kudos\\:\\n(.*?)\\\n")[, 2]
+  
+  ### Comments Count
+  work_info$comments <-
+    str_match(raw_text, "Comments\\:\\n(.*?)\\\n")[, 2]
+  
+  ### Hits Count
+  work_info$hits <-
+    str_match(gsub("\n", " ", raw_text), "Hits\\:(.*)")[, 2]
+  
+  ### Last Updated
+  work_info$last_updated <-
+    str_match(raw_text, "Updated\\:\\n(.*?)\\\n")[, 2]
+  
+  ### Completed
+  work_info$completed <-
+    str_match(raw_text, "Completed\\:\\n(.*?)\\\n")[, 2]
+  
+  ### (In)Complete Status
+  work_info$status <- if ("?" == sub(".*/",
+                                     "",
+                                     str_match(raw_text, "Chapters\\:\\n(.*?)\\\n")[, 2])) {
+    "Ongoing"
+  } else {
+    "Complete"
+  }
+  
+  ### Bookmarks Count
+  work_info$bookmarks <-
+    str_match(raw_text, "Bookmarks\\:\\n(.*?)\\\n")[, 2]
+  
+  ### Relationships
+  work_info$relationships <-
+    str_match(gsub("\n", " ", raw_text), "Relationships\\:(.*?)Characters")[, 2]
+  
+  ### Content Warnings
+  work_info$warnings <-
+    str_match(raw_text, "Archive Warning\\:\\n(.*?)\\\n")[, 2]
+  
+  ### Age Category (Mature, Teens, General)
+  work_info$age_category <-
+    str_match(raw_text, "Rating\\:\\n(.*?)\\\n")[, 2]
+  
+  ### Fandoms
+  work_info$fandoms <-
+    str_match(gsub("\n", " ", raw_text), "Fandoms\\:(.*?)Relationships")[, 2]
+  
+  ### Display the work info table
+  work_info
 }
 
 #GetWorkInfo("https://archiveofourown.org/works/28747785")
@@ -118,7 +135,7 @@ work_info
 ```{r}
 GetChapterIndex <- function(input){
 index <- GET(
-    paste0(input, "/navigate"),
+    paste0(WorkURL(input), "/navigate"),
     user_agent(
       "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.93 Safari/537.36"
     )
@@ -140,7 +157,7 @@ chapter_info <- chapter_info[2:end,1] %>% data.frame()
 
 colnames(chapter_info) <- "title"
 
-chapter_info <- titles %>%
+chapter_info <- chapter_info %>% 
   mutate(title = paste0("START", title, "END")) %>% ### adding markers for start/end
   mutate(
     chapter = str_match(title, "START(.*?)\\.")[, 2],
@@ -194,9 +211,9 @@ for (i in 1:100) {
   ### loops through each comment page
   url <-
     paste0(
-      input,"?page=",
+      WorkURL(input),"?page=",
       i,
-      "&show_comments=true&view_full_work=true#comments"
+      "&show_comments=true&view_adult=true&view_full_work=true#comments"
     )
   
   ### Gets HTML page
@@ -293,49 +310,43 @@ if (keep.text == FALSE){
 ```
 
 
-### Chapter Text
+# TESTING AREA
 
+## GetWorkInfo
 
+Results should be: a 1x13 table
 
-**STILL IN PROGRESS**
-
-
+### From a Chapter Link
 ```{r}
-chapters <- GetChapters("https://archiveofourown.org/works/28747785")
+GetWorkInfo("https://archiveofourown.org/works/30422667/chapters/75006909")
+```
+
+### From a Work Link
+```{r}
+GetWorkInfo("https://archiveofourown.org/works/30422667")
+```
+
+## GetChapterIndex
+
+### From a Chapter Link
+```{r}
+GetChapterIndex("https://archiveofourown.org/works/30422667/chapters/75006909")
+```
+
+### From a Works Link
+```{r}
+GetChapterIndex("https://archiveofourown.org/works/30422667")
+```
+
+## Get Comments
+
+### From a Chapter Link
+```{r}
+GetComments(input = "https://archiveofourown.org/works/28747785/chapters/70490640", keep.text = FALSE, excl.author = FALSE)
 ```
 
 
+### From a Works Link
 ```{r}
-url <- chapters[1,4]
-
-chapter <- GET(
-    url,
-    user_agent(
-      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.93 Safari/537.36"
-    )
-  ) %>%
-    read_html()
+GetComments(input = "https://archiveofourown.org/works/28747785", keep.text = FALSE, excl.author = FALSE)
 ```
-https://archiveofourown.org/downloads/28747785/To%20Take%20Down%20A%20King.html?updated_at=1619798356
-```{r}
-chapter %>%
-  html_element(css = "#chapter-1") %>%
-  html_text2() 
-```
-
-
-comm <- GET(
-    url,
-    user_agent(
-      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.93 Safari/537.36"
-    )
-  ) %>%
-    read_html()
-  
-  ### Downloads comments
-  test_comm <-  comm %>%
-    html_elements(css = "ol li") %>%
-    html_text2() %>%
-    data.frame()
-
-
