@@ -3,7 +3,7 @@
 # FanficReadeR
 **A webscraper for gathering public data on AO3**
 
-Fanfiction is an interesting consumer area. You have a set of people who love a work so much that they dedicate countless hours of their time to creating their own stories inside the world of the story. There is little material gain for writing fanfic; authors are paid very little for their time (if at all), and writing a fanfic can sometimes feel like screaming one's thoughts into the void.
+Fanfiction is an interesting consumer area. You have a set of people who love a work so much that they dedicate countless hours of their time to creating their own stories inside the world of the story. There is little material gain for writing fanfic; authors are paid very little for their time (if at all), and the writing process can be incredibly lonely absent reader feedback.
 
 Yet fanfiction has also been the engine behind a number of pop culture mega-hits. Fifty Shades of Gray? [Started with a Twilight Fanfic](https://www.forbes.com/sites/hayleycuccinello/2017/02/10/fifty-shades-of-green-how-fanfiction-went-from-dirty-little-secret-to-money-machine/?sh=1886f89d264c). City of Bones (the book series) & Shadowhunters (the Netflix series)? [Started with a Harry Potter Fanfic](https://theweek.com/articles/460833/girls-film-confounding-problems-fan-fiction). More original content that is posted on fanfiction sites like Wattpad have [also led to Netflix TV series](https://techcrunch.com/2018/06/14/netflixs-latest-hit-the-kissing-booth-is-a-wattpad-success-story/).
 
