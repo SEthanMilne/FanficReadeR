@@ -1,16 +1,16 @@
 <img align="right" src="https://user-images.githubusercontent.com/83033161/119401227-37682880-bca9-11eb-88d2-6b82f74847a8.png"> 
 
 # FanficReadeR
-*A webscraper for gathering public data on AO3*
+**A webscraper for gathering public data on AO3**
 
 Fanfiction is an interesting consumer area. You have a set of people who love a work so much that they dedicate countless hours of their time to creating their own stories inside the world of the story. There is little material gain for writing fanfic; authors are paid very little for their time (if at all), and writing a fanfic can sometimes feel like screaming one's thoughts into the void.
 
 Yet fanfiction has also been the engine behind a number of pop culture mega-hits. Fifty Shades of Gray? [Started with a Twilight Fanfic](https://www.forbes.com/sites/hayleycuccinello/2017/02/10/fifty-shades-of-green-how-fanfiction-went-from-dirty-little-secret-to-money-machine/?sh=1886f89d264c). City of Bones (the book series) & Shadowhunters (the Netflix series)? [Started with a Harry Potter Fanfic](https://theweek.com/articles/460833/girls-film-confounding-problems-fan-fiction). More original content that is posted on fanfiction sites like Wattpad have [also led to Netflix TV series](https://techcrunch.com/2018/06/14/netflixs-latest-hit-the-kissing-booth-is-a-wattpad-success-story/).
 
-It's not an exaggeration to say that media juggernauts like the Harry Potter books by J.K. Rowling owe a lot to the content their fans have generated; The over 800,000 HP Fanfics on one website, AO3, have certainly contributed to the maintenance of a passionate fanbase.
-
-This is all to say that understanding the dynamics of fanfiction communities is important for understanding modern media. I've made what I hope is a useful
+It's not an exaggeration to say that media juggernauts like the Harry Potter books by J.K. Rowling owe a lot to the content their fans have generated; The over 800,000 HP Fanfics on one website, AO3, have certainly contributed to the maintenance of a passionate fanbase. I've made what I hope is a useful
 tool for researchers and enthusiasts to easily get data about fanfiction communities.
+
+***Note: at present, this package only scrapes data from AO3. This project was first targeted towards scraping from Fanfiction.net, but their website blocks all attempts at webscraping - perhaps due to their promised API coming soon. If and when that happens, I'll be making a companion package for collecting data from Fanfiction.net***
 
 ## The Package
 `FanficReadeR` scrapes data from [ArchiveOfOurOwn](http://archiveofourown.org) (AO3), one of the world's leading fanfiction websites, with more than 3.7 million registered users and 7.6 million works listed on the platform. This package gathers data about two broad categories: **Users** and **Works**
@@ -63,7 +63,10 @@ There are a number of features about users that may prove interesting to an exte
 
 Please note that many of these functions may take a while to run. Because this is scraping HTML web pages from AO3, I needed to add a `Sys.sleep(2)` to the functions that scrape multiple web pages in quick succession, so as not to be flagged as a bot.
 
-I have decided not to display an example of the functions working on GitHub, as that may violate the privacy of some random AO3 user. Included in this repository are two .rmd documents - `AuthorInfoTest.rmd` and `WorksInfoTest.rmd` - which contain versions of the functions you can modify for yourself, as well as some basic tests of the function that show how to call them using real users. Here are some fake calls below, for your reference:
+## Examples
+I have decided not to display an example of the functions working on GitHub, as that may violate the privacy of some random AO3 user. Included in this repository are two .rmd documents - `AuthorInfoTest.rmd` and `WorksInfoTest.rmd` - which contain versions of the functions you can modify for yourself, as well as some basic tests of the function that show how to call them using real users. I have, however, written down some example function calls for your reference.
+
+### Basic Call Examples
 
 ```r
 GetAuthorAll("SEthanMilne")
@@ -76,7 +79,8 @@ GetComments("https://archiveofourown.org/works/XXXXX", keep.text = FALSE, excl.a
 # GetComments("https://archiveofourown.org/works/XXXXX/chapters/XXXXX") ## Chapter Link
 ```
 
-A more complex use case of these functions might be scraping all comments received by an author, using both the AuthorInfo data AND comments data:
+### Advanced Call Examples
+A more complex use case of these functions might be scraping all comments received by an author, using both the AuthorInfo data AND comments data. I've done this myself on a set of users (to make sure this package worked at all), and an anonymized version of that code can be found below:
 
 ```r
 works <- GetAuthorWorks("SEthanMilne") ## Get a df of all works
@@ -86,15 +90,16 @@ work_name <- works$Titles ## Extract a vector of work names from the above call
 
 all_comments <- list()
 
-for (i in 1:length(urls){
+for (i in 1:length(urls)){
 
     ## Generate a list of all works by an author and associated comments
 
-    all_comments[[i]]- GetComments(urls[i], keep.text = FALSE, excl.author = TRUE) %>%
+    all_comments[[i]] <- GetComments(urls[i], keep.text = FALSE, excl.author = TRUE) %>%
                     mutate(work = work_name[i]) ## add a column for the work name
 
 }
 ```
+
 
 
 ## Installation
