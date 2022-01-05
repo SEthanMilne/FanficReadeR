@@ -1,62 +1,17 @@
 GetAuthorWorks <- function(input) {
-  ### Download Works HTML Page
-  author_works <- GET(
-    paste0(
-      "https://archiveofourown.org/users/",
-      Author_Name(input),
-      "/works"
-    ),
-    user_agent(
-      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.93 Safari/537.36"
-    )
-  ) %>%
-    read_html()
+  author_works <- get_html(get_worksurl(input))
+  works_info <- get_workstable(author_works)
 
-  ### Setting up Works Table
-  works_info <-
-    sub(".*.Listing Works",
-        "",
-        gsub(
-          "",
-          "",
-          author_works %>%
-            html_element(css = "#main") %>%
-            html_text2()
-        )) %>%
-    str_match_all("\\\n(.*?)by do not cache") %>%
-    data.frame() %>%
-    select(X2) %>%
-    rowid_to_column() %>%
-    rename(Titles = X2, Work = rowid)
-
-  ### Works Page is a large string of text with all works data
-  ### But Works are Preceded by the string "do not cache"
-  ### Above function splits into DF by that string
-
-
-
-  ### Big For-Loop for capturing all Works Summary Data
-
-
-  if (0 == sub(".*Works *(.*?) *Series.*", "\\1",
-               gsub(
-                 "\n",
-                 " ",
-                 gsub(
-                   "[[:punct:]]",
-                   "",
-                   author_works %>%
-                   html_element(css = "#dashboard") %>%
-                   html_text2()
-                 )
-               ))) {
+  if (check_if_noworks(author_works)) {
     "N/A"
-  } else{
+  }
+  else{
+
+
     works_info$raw_text <- strsplits(author_works %>%
                                        html_element(css = "#main") %>%
                                        html_text2(),
                                      works_info$Titles)[-1]
-
 
 
     ### Get Works IDs and URLs
@@ -75,74 +30,28 @@ GetAuthorWorks <- function(input) {
 
 
     ### Get Works URLs
-
-    works_info$work_url <-
-      paste0("https://archiveofourown.org/works/",
-             works_info$work_id)
-
+    works_info$work_url <-paste0("https://archiveofourown.org/works/",
+                                 works_info$work_id)
 
     for (i in 1:nrow(works_info)) {
-      ### Word Count
-      works_info$word_count[i] <-
-        str_match(works_info$raw_text[i], "Words\\:\\n(.*?)\\\n")[1, 2]
-
-      ### Language
-      works_info$language[i] <-
-        str_match(works_info$raw_text[i], "Language\\:\\n(.*?)\\\n")[1, 2]
-
-      ### Chapter Count
-      works_info$chapters[i] <-
-        sub("/.*",
-            "",
-            str_match(works_info$raw_text[i], "Chapters\\:\\n(.*?)\\\n")[1, 2])
-
-      ### Kudos Count
-      works_info$kudos[i] <-
-        str_match(works_info$raw_text[i], "Kudos\\:\\n(.*?)\\\n")[1, 2]
-
-      ### Comments Count
-      works_info$comments[i] <-
-        str_match(works_info$raw_text[i], "Comments\\:\\n(.*?)\\\n")[1, 2]
-
-      ### Hits Count
-      works_info$hits[i] <-
-        str_match(works_info$raw_text[i], "Hits\\:\\n(.*?)\\\n")[1, 2]
-
-      ### Last Updated
-      works_info$last_updated[i] <-
-        str_match(works_info$raw_text[i], "\\n(.*?)\\\n\\nTags")[1, 2]
-
-      ### (In)Complete Status
-      works_info$status[i] <-
-        str_match(works_info$raw_text[i],
-                  paste0("\\n(.*?)\\\n\\n", works_info$last_updated[i]))[1, 2]
-
-      ### Bookmarks Count
-      works_info$bookmarks[i] <-
-        str_match(works_info$raw_text[i], "Bookmarks\\:\\n(.*?)\\\n")[1, 2]
-
-      ### Pairings (M/M, F/F, M/F, Multi, etc)
-      works_info$pairings[i] <-
-        str_match(works_info$raw_text[i],
-                  paste0("\\n(.*?)\\\n", works_info$status[i]))[1, 2]
-
-      ### Content Warnings
-      works_info$warnings[i] <-
-        str_match(works_info$raw_text[i],
-                  paste0("\\n(.*?)\\\n", works_info$pairings[i]))[1, 2]
-
-      ### Age Category (Mature, Teens, General)
-      works_info$age_category[i] <-
-        str_match(works_info$raw_text[i],
-                  paste0("\\n(.*?)\\\n", works_info$warnings[i]))[1, 2]
-
-      ### Fandoms
-      works_info$fandoms[i] <-
-        str_match(
-          works_info$raw_text[i],
-          paste0("\\nFandoms\\:(.*?)\\\n", works_info$age_category[i])
-        )[1, 2]
+      raw_text <- works_info$raw_text[i]
+      works_info$word_count[i] <- get_wordcount(raw_text)
+      works_info$language[i] <- get_language(raw_text)
+      works_info$chapters[i] <- get_chapters(raw_text)
+      works_info$kudos[i] <- get_kudos(raw_text)
+      works_info$comments[i] <- get_comments(raw_text)
+      works_info$hits[i] <- get_hits_alt(raw_text)
+      works_info$last_updated[i] <- get_lastupdated_alt(raw_text)
+      works_info$status[i] <- get_status_alt(raw_text)
+      works_info$bookmarks[i] <- get_bookmarks(raw_text)
+      works_info$pairings[i] <- get_relationships_alt(raw_text)
+      works_info$warnings[i] <- get_warnings_alt(raw_text)
+      works_info$age_category[i] <- get_category_alt(raw_text)
+      works_info$fandoms[i] <- get_fandoms_alt(raw_text)
     }
-    works_info
+
+    works_info |>
+      select(-raw_text)
+
   }
 }
