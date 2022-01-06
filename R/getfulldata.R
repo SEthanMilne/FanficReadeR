@@ -26,8 +26,6 @@ GetFullData <- function(fandom, pages){
 
     output_list[[i]] <- temp_list
 
-    Sys.sleep(60)
-
   }
 
   output_list

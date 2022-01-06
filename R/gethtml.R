@@ -1,7 +1,7 @@
 # Downloads HTML page
 get_html <- function(input){
 
-  rpm_delay()
+  rpm_delay_alt()
 
   GET(
     input,
@@ -10,4 +10,7 @@ get_html <- function(input){
     )
   ) |>
     read_html()
+
+
+
 }
