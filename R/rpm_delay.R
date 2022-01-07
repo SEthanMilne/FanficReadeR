@@ -40,7 +40,7 @@ rpm_delay_alt <- function(){
 
     req_count <<- req_count + 1
 
-    if (req_count %% 200 == 0){
+    if (req_count %% 60 == 0){
       Sys.sleep(300)
     }
 
