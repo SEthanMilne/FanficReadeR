@@ -3,7 +3,7 @@
 # FanficReadeR
 **A webscraper for gathering public data on AO3**
 
-Fanfiction is an interesting consumer area. You have a set of people who love a work so much that they dedicate countless hours of their time to creating their own stories inside the world of the story. There is little material gain for writing fanfic; authors are paid very little for their time (if at all), and the writing process can be incredibly lonely absent reader feedback.
+Fanfiction is an interesting area for consumer research. There are some consumers who love a media franchise so much that they dedicate countless hours of their time to creating their own stories in that franchise's world. There is also little material gain for writing fanfic; authors are paid very little for their time (if at all), and the writing process can be incredibly lonely absent reader feedback.
 
 Yet fanfiction has also been the engine behind a number of pop culture mega-hits. Fifty Shades of Gray? [Started with a Twilight Fanfic](https://www.forbes.com/sites/hayleycuccinello/2017/02/10/fifty-shades-of-green-how-fanfiction-went-from-dirty-little-secret-to-money-machine/?sh=1886f89d264c). City of Bones (the book series) & Shadowhunters (the Netflix series)? [Started with a Harry Potter Fanfic](https://theweek.com/articles/460833/girls-film-confounding-problems-fan-fiction). More original content that is posted on fanfiction sites like Wattpad have [also led to Netflix TV series](https://techcrunch.com/2018/06/14/netflixs-latest-hit-the-kissing-booth-is-a-wattpad-success-story/).
 
@@ -20,6 +20,7 @@ Works are simply stories writting by users. They come in a variety of formats:
 * One-Shots - short stories that typically have only 1 chapter
 * Epics - the current [longest-fanfic](https://archiveofourown.org/works/7899862) is over 5 million words
 * Joke Fics - the current [most-liked fic on AO3](https://archiveofourown.org/works/2080878) is one that simply repeats "I am Groot" over and over again.
+* Smut Fics - there is a lot of pornography on fanfiction websites. For more details, see the Wikipedia page on [Rule 34](https://en.wikipedia.org/wiki/Rule_34)
 
 Works can also be organized into **series**, or collections of individual fanfics to tell some broader story or to explore similar themes. Some users, for example, may write a series of Harry Potter fanfictions that follow a similar structure as the 7-book original series.
 
@@ -61,7 +62,22 @@ There are a number of features about users that may prove interesting to an exte
 | `GetChapterIndex()`  | Work Link OR Chapter Link  | Creates an index of all chapters in the relevant work. Lists their names, chapter order, and provides a URL|
 | `GetComments`  | Work Link OR Chapter Link  | Gathers all comments on the relevant work. For each comment, this function also tells you which user made the comment, if that user was the author, when the comment was made, what chapter the comment was made on. The large nature of the data that this can generate means that I have added a few extra options to the function: 1) `keep.text = TRUE` is the default, and preserves the original text of the comment in the output, 2) `excl.author = FALSE` is the default, and removes comments made by the author on their own work|
 
-Please note that many of these functions may take a while to run. Because this is scraping HTML web pages from AO3, I needed to add a `Sys.sleep(2)` to the functions that scrape multiple web pages in quick succession, so as not to be flagged as a bot.
+
+### Fandom Data
+
+| Function  | Inputs| Description |
+| ------------- | ------------- | ------------- | 
+| `GetFandomIndex()`  | Fandom Name, number of pages  | Gathers an index of fanfiction URLs for a given fandom, outputted as a dataframe. Currently, this function selects the most recently updated fanfictions in the given fandom. When using this function, you need to specify how many pages of results to gather -- AO3 displays 20 results per page, so if you want to gather 20 fanfiction URLs you would set numbere of pages to 1, and for 100, set page numbers to 5. |
+
+## Rate Limits
+
+AO3 limits how many requests can be made to their website. They use the platform `rack::attack` for their servers, which limits requests to AO3's website to only 60 per minute (the exact rate limit is a actually 300 req per 300 sec, per the open source [AO3 GitHub](https://github.com/otwcode/otwarchive/blob/master/config/initializers/rack_attack.rb)). However, in practice the throttle threashold for AO3 is much smaller than this. I've tested the functions here many times, and there will be no point at which you will consistently achieve 6rpm without hitting a HTTP 429 error for making too many requests.
+
+The function that requests HTML pages -- `gethtml()` -- includes a helper sub-function called `rpm_delay_alt()` which internally throttles the number of requests to the AO3 server that `FanficReadeR` makes. There are two ways it does this:
+* `rpm_delay_alt()` creates a counter variable that counts the number of times the `gethtml()` function is used. Every 60 requests, the function will make your R program halt for 300 seconds (5 minutes).
+* `rpm_delay_alt()` also tracks the time intervals between each `gethtml()` usage, and makes it so that at maximum you can only make one request every 3 seconds. 
+
+Unless you're trying to gather large quantities of data, this shouldn't matter all that much to you. The scraper works relatively fast for single-fanfic scrapings, but the delays will make it so that large-scale scraping efforts could take multiple hours. I'd appreciate any suggestions for improving the efficiency of the `gethtml()` and `rpm_delay_alt()` functions.
 
 ## Examples
 I have decided not to display an example of the functions working on GitHub, as that may violate the privacy of some random AO3 user. Included in this repository are two .rmd documents - `AuthorInfoTest.rmd` and `WorksInfoTest.rmd` - which contain versions of the functions you can modify for yourself, as well as some basic tests of the function that show how to call them using real users. I have, however, written down some example function calls for your reference.
@@ -77,6 +93,8 @@ GetChapterIndex("https://archiveofourown.org/works/XXXXX") ## Work Link
 
 GetComments("https://archiveofourown.org/works/XXXXX", keep.text = FALSE, excl.author = TRUE) ## Work Link
 # GetComments("https://archiveofourown.org/works/XXXXX/chapters/XXXXX") ## Chapter Link
+
+GetFandomIndex("Fantastic Beasts and Where to Find Them (Movies)", 3) ## gets 3 pages of index results
 ```
 
 ### Advanced Call Examples
