@@ -67,7 +67,7 @@ There are a number of features about users that may prove interesting to an exte
 
 | Function  | Inputs| Description |
 | ------------- | ------------- | ------------- | 
-| `GetFandomIndex()`  | Fandom Name, number of pages  | Gathers an index of fanfiction URLs for a given fandom, outputted as a dataframe. Currently, this function selects the most recently updated fanfictions in the given fandom. When using this function, you need to specify how many pages of results to gather -- AO3 displays 20 results per page, so if you want to gather 20 fanfiction URLs you would set numbere of pages to 1, and for 100, set page numbers to 5. |
+| `GetFandomIndex()`  | Fandom Name, number of pages, start page (default = 1)  | Gathers an index of fanfiction URLs for a given fandom, outputted as a dataframe. Currently, this function selects the most recently updated fanfictions in the given fandom. When using this function, you need to specify how many pages of results to gather -- AO3 displays 20 results per page, so if you want to gather 20 fanfiction URLs you would set numbere of pages to 1, and for 100, set page numbers to 5. |
 
 ## Rate Limits
 
