@@ -39,10 +39,10 @@ CommentURL <- function(input, page){
 
 
 get_authorname <- function(input){
-  get_html(input)|>
+  get_html(input) |>
     html_elements(css = ".heading") |>
     html_text2() |>
     data.frame() |>
     (\(x) x[6,])() |>
-    (\(x) sub(',.*', "", x))()
+    (\(x) strsplits(x, ", "))()
 }

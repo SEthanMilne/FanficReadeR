@@ -1,4 +1,4 @@
-GetFandomIndex <- function(fandom, pages) {
+GetFandomIndex <- function(fandom, pages, start = 1) {
   indexURL <- get_indexURL(fandom)
   index <- get_html(indexURL)
   indexpages <- get_indexpages(index)
@@ -7,7 +7,7 @@ GetFandomIndex <- function(fandom, pages) {
 
   index_ids <- as.data.frame(matrix(ncol = 1, nrow = 0))
 
-  for (i in 1:pagecount){
+  for (i in start:pagecount){
     pageURL <- get_indexURLpage(indexURL, i)
 
     page_html <- get_html(pageURL)

@@ -1,0 +1,472 @@
+---
+title: "Testing_File"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Load Package
+
+```{r}
+devtools::load_all()
+```
+
+
+
+
+```{r}
+index <- GetFandomIndex("Fantastic Beasts and Where to Find Them (Movies)", 690, start = 351)
+
+# full: 690
+```
+
+
+```{r}
+save(index, file = "next_index_350.rdata")
+```
+
+
+```{r}
+load("index_350")
+
+test1 <- index
+load("next_index_350")
+test2 <- index
+```
+
+
+```{r}
+full_index <- rbind(test1, test2)
+```
+
+```{r}
+save(full_index, file = "full_index.rdata")
+```
+
+# Works Info
+```{r}
+output <- list()
+
+for (i in 1:nrow(full_index)){
+  link <- full_index[i,1]
+  output[[link]] <- GetWorkInfo(link)
+}
+```
+
+```{r}
+for (i in max(length(output), 1):nrow(full_index)){
+  link <- full_index[i,1]
+  output[[link]] <- GetWorkInfo(link)
+}
+```
+
+```{r}
+save(output, file = "full_worksinfo.rdata")
+```
+
+
+
+# Chapter Info
+```{r}
+load("full_index.rdata")
+load("full_worksinfo.rdata")
+```
+
+```{r}
+
+GetChapterIndex <- function(input) {
+  index <- get_html(ChapterIndexURL(input))
+
+  chapter_info <- index |>
+    html_element(css = "#main") |>
+    html_text2() |>
+    strsplits("\n") |>
+    data.frame()
+
+  colnames(chapter_info) <- "title"
+  
+    end <- nrow(chapter_info) - 1
+  chapter_info <- chapter_info[2:end, 1] |>
+    data.frame()
+
+  colnames(chapter_info) <- "title"
+
+  chapter_info <- chapter_info |>
+    mutate(
+      chapter = chapter_getnumber(title),
+      date = chapter_getdate(title),
+      title = chapter_cleantitle(title)
+    )
+  
+  chapter_info
+}
+  
+  chapter_index <- GetChapterIndex("https://archiveofourown.org/works/23429491")
+```
+
+```{r}
+GetDownloadURL <- function(input) {
+  get_html(WorkInfoURL(input)) |>
+    html_element(xpath = '//*[@id="workskin"]/div[1]/h2') |>
+    html_text2() #|>
+    #(\(x) gsub(" ", ""))()
+}
+
+
+download_url <- GetDownloadURL("https://archiveofourown.org/works/23429491")
+```
+
+
+```{r}
+html <- get_html(WorkInfoURL("https://archiveofourown.org/works/35276581/chapters/87914224")) 
+```
+https://archiveofourown.org/works/35276581/chapters/87914224
+
+https://archiveofourown.org/works/28082433
+```{r}
+html
+```
+
+
+```{r}
+html |>
+  html_element(xpath = '//*[@id="outer"]') |>
+  html_element(xpath = '//*[@id="inner"]') |>
+  html_element(xpath = '//*[@id="main"]') |>
+  html_element(xpath = '//*[@class="work"]') |>
+  html_element(xpath = '//*[@class="work navigation actions"]') |>
+  html_element(xpath = '//*[@class="download"]') |>
+  html_element(xpath = 'ul') |>
+  html_element(xpath = 'li[5]') |>
+  html_element(xpath = 'a') |>
+  html_attrs() |>
+  as.character()
+```
+//*[@id="main"]/div[2]/ul/li[6]/ul
+//*[@id="main"]/div[2]/ul
+
+#main > div.work > ul > li.download > ul
+
+```{r}
+  get_html("https://archiveofourown.org/works/23429491?view_adult=true") |>
+    html_element(xpath = '//*[@id="workskin"]/div[1]/h2') |>
+  html_text2()
+```
+
+https://archiveofourown.org/downloads/28082433.html/fighting%20for%20a%20lifestyle.html
+
+```{r}
+story_text <- get_html(download_url) |>
+  html_text2()
+```
+
+```{r}
+chapter_index
+```
+
+```{r}
+story_text
+```
+
+
+```{r}
+for (i in 1:(nrow(chapter_index) - 1)){
+  
+  ch_1 <- chapter_index$title[i]
+  ch_2 <- chapter_index$title[i + 1]
+  
+  regex <-paste0("(?s)\\n\\n",
+         ch_1,
+         "\\n\\n(.*?)\\n\\n",
+         ch_2,
+         "\\n\\n")
+  
+
+  
+test <- str_match(story_text, regex) |>
+  (\(x) x[,2])() |>
+  (\(x) gsub("\\n", " ", x))() |>
+  wordcount()
+
+
+}
+```
+
+
+
+```{r}
+str_match(story_text, "(?s)\\n\\nRight and Wrong Lessons\\n\\n(.*?)\\n\\nGood Grief\\n\\n") |>
+  (\(x) x[,2])() |>
+  (\(x) gsub("\\n", " ", x))() |>
+  wordcount()
+```
+
+```{r}
+head(output, 1)
+```
+
+
+
+
+```{r}
+workurls <- names(output)
+
+chapter_indexlist <- list()
+```
+
+```{r}
+for (i in max(length(chapter_indexlist), 1):length(workurls)){
+  link <- workurls[i]
+  
+  no_chapters <- output[[link]]$chapters |>
+    as.numeric()
+  
+  if (no_chapters == 1){
+    chapter_indexlist[[link]] <- 0
+  } else{
+  chapter_indexlist[[link]] <- GetChapterIndex(link)
+  }
+}
+```
+
+```{r}
+save(chapter_indexlist, file = "chapter_index.rdata")
+```
+
+# scrape comments
+
+```{r}
+comment_list <- list()
+```
+
+```{r}
+for (i in max(length(comment_list), 1):length(workurls)){
+  link <- workurls[i]
+   
+  no_comments <- is.na(output[[link]]$comments)
+  no_chapters <- output[[link]]$chapters |> as.numeric()
+  
+  if (no_comments == TRUE){
+    comment_list[[link]] <- 0
+  } else if(no_chapters == 1) {
+    comment_list[[link]] <- GetComments_1chap(link)
+  } else {
+  comment_list[[link]] <- GetComments(link)
+  }
+}
+```
+
+```{r}
+save(comment_list, file = "comment_data.rdata")
+```
+
+# Get Author Names
+
+```{r}
+author_names <- list()
+```
+
+```{r}
+for (i in max(length(author_names), 1):length(workurls)){
+  link <- workurls[i]
+  
+  authors <- get_authorname(link)
+  
+  author_names[[link]] <- authors
+  
+}
+
+```
+
+
+```{r}
+names(output)[13623]
+```
+```{r}
+#author_names[[13623]] <- "Work Deleted"
+```
+
+
+# Get Author Info
+
+```{r}
+head(author_names)
+```
+```{r}
+names(author_names)[1]
+
+length(author_names[1])
+author_names[[1]]
+```
+```{r}
+author_info <- list()
+```
+
+
+```{r}
+for (i in max(length(author_info), 1):length(author_names)) {
+  
+  link <- names(author_names)[i]
+  
+  first_name <- author_names[[i]][1] 
+  
+  
+  if (first_name |>
+        str_detect(fixed("("))) {
+      first_name <- first_name |>
+        str_match("\\((.*?)\\)") |>
+        (\(x) x[, 2])()
+    }
+  
+  if (first_name == "Work Deleted"){
+    author_info[[link]] <- "Work Deleted"
+    next
+  }
+  
+  if (first_name == "orphan_account") {
+    author_info[[link]] <- "Author Deleted"
+    next
+  }
+    
+    if (first_name |>
+        str_detect(fixed("("))) {
+      first_name <- first_name |>
+        str_match("\\((.*?)\\)") |>
+        (\(x) x[, 2])()
+    }
+  
+  author_info[[link]] <- GetAuthorInfo(
+    paste0("https://archiveofourown.org/users/", 
+           first_name))
+  
+  no_authors <- length(author_names[i])
+  
+  if (no_authors > 1){
+  
+  for (j in 2:no_authors) {
+    
+    author_name <- author_names[[i]][j]
+    
+    if (author_name |>
+        str_detect(fixed("("))) {
+      author_name <- author_name |>
+        str_match("\\((.*?)\\)") |>
+        (\(x) x[, 2])()
+    }
+    
+    author_link <-
+      paste0("https://archiveofourown.org/users/", author_name)
+    
+    author_info[[link]][j] <- GetAuthorInfo(author_link)
+  }
+    
+  }
+  
+  
+}
+```
+
+
+```{r}
+save(author_names, file = "author_names.rdata")
+```
+
+```{r}
+save(author_info, file = "author_info.rdata")
+```
+
+# Get Chapter Text
+
+```{r}
+chapter_text <- list()
+```
+
+```{r warning = FALSE, message = FALSE}
+for (i in max(length(chapter_text), 1):length(author_info)) {
+  link <- names(author_info)[i]
+  
+  if (author_info[[link]] == "Work Deleted") {
+    chapter_text[[link]] <- "Work Deleted"
+    next
+  }
+  
+  if (author_info[[link]] == "Author Deleted") {
+    chapter_text[[link]] <- "Author Deleted"
+    next
+  }
+  
+  full_link <- paste0(link, "?view_full_work=true")
+
+  
+  page_data <- get_html(full_link)
+  
+  chapter_text[[link]] <- page_data |>
+    html_elements(xpath = '//*[@id="chapters"]/div') |>
+    html_text2()
+  
+  if (identical(chapter_text[[link]], character(0))) {
+    full_link <-
+      paste0(link, "?view_adult=true", "?view_full_work=true")
+    
+    page_data <- get_html(full_link)
+    
+    chapter_text[[link]] <- page_data |>
+      html_elements(xpath = '//*[@id="chapters"]/div') |>
+      html_text2()
+    
+  }
+  
+}
+```
+
+```{r}
+x_author <- 12505
+#names(author_info)[x_author]
+#author_info[[x_author]] <- "Work Deleted"
+```
+```{r}
+save(chapter_text, file = "chapter_text.rdata")
+```
+
+
+```{r}
+identical(chapter_text[[1]], character(0))
+```
+
+
+```{r}
+testlink <- "https://archiveofourown.org/works/27433657?view_full_work=true"
+
+chapter_page <- get_html(testlink)
+```
+
+```{r}
+chapter_page |>
+  html_elements(xpath = '//*[@id="chapters"]/div') |>
+  html_text2()
+```
+
+```{r}
+names(author_info)[11]
+```
+
+```{r}
+testlink <- "https://archiveofourown.org/works/36216010?view_full_work=true"
+
+chapter_page <- get_html(testlink)
+```
+
+```{r}
+chapter_page |>
+  html_elements(xpath = '//*[@id="chapters"]/div') |>
+  html_text2()
+```
+
+
+
+```{r}
+chapter_text["https://archiveofourown.org/works/36216010"]
+```
+

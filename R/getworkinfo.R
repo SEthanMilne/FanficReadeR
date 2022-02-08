@@ -1,6 +1,5 @@
 GetWorkInfo <- function(input) {
   link <- WorkInfoURL(input)
-  print(link)
   work <- get_html(link)
 
   raw_text <- work |>

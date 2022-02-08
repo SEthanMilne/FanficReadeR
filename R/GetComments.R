@@ -15,6 +15,14 @@ GetComments <- function (input) {
     url <- CommentURL(input, i)
     comm <- get_html(url)
 
+    if (comm |>
+        html_element(xpath = '//*[@id="feedback"]/p') |>
+        html_text2() |>
+        is.na() != TRUE){
+      return(0)
+    }
+
+
     comments <- comm |>
       html_elements(css = "ol li") |>
       html_text2() |>
@@ -27,8 +35,7 @@ GetComments <- function (input) {
         filter(grepl("on Chapter", comments)) |>
         nrow()) {
       break
-    }
-    else{
+    } else {
 
       names(comments) <- "comments"
 
@@ -47,18 +54,56 @@ GetComments <- function (input) {
     }
   }
 
-  ### Get Authors Name
-  name <- comm |>
-    html_elements(css = ".heading") |>
-    html_text2() |>
+
+  comment_data <- comment_data[-1, ] #|>
+
+  comment_data
+
+}
+
+
+
+
+GetComments_1chap <- function(input) {
+  id <- sub(".*https://archiveofourown.org/works/", "", input)
+  comment_url <-
+    paste0("https://archiveofourown.org/comments/show_comments?work_id=",
+           id)
+  comm <- get_html(comment_url)
+
+  comment_text <- comm |>
+    html_element(xpath = '//*[@id="outer"]') |>
+    html_element(xpath = '//*[@id="inner"]') |>
+    html_element(xpath = '//*[@id="main"]') |>
+    html_element(xpath = '//*[@id="feedback"]') |>
+    html_element(xpath = '//*[@id="comments_placeholder"]') |>
+    html_text2()
+
+  if (comment_text == ""){
+    return("Comments Hidden")
+  }
+
+  comment_text <- gsub("Parent Thread\n", "", comment_text)
+  comment_text <- gsub("(Previous comment deleted.)\n\n", "", comment_text)
+
+  comment_df <-
+    strsplits(comment_text, "\n\nComment Actions\nReply\nThread\n") |>
     data.frame()
 
-  name <- name[6,]
+  names(comment_df) <- "raw_text"
 
-  ### Flag comments made by the author
-  comment_data <- comment_data[-1, ] #|>
-  #mutate(author = as.character(str_detect(name, user)))
+  comment_data <- comment_df |>
+    (\(x) slice(x, 1:(n() - 1)))() |>
+    mutate(raw_text = str_remove(raw_text, "\\(Previous comment deleted.\\)\\n\\n")) |>
+    mutate(raw_text = str_remove(raw_text, "\\n\\((.*?)this thread\\)\\n\\n")) |>
+    mutate(user = gsub(" .*$", "", raw_text)) |>
+    mutate(text = sub(".*\\n\\n", "", raw_text)) |>
+    mutate(raw_text = str_remove(raw_text, fixed(user))) |>
+    mutate(raw_text = str_replace(raw_text, "\\n\\n", " COMMENTSTARTS ")) |>
+    mutate(date = sub("COMMENTSTARTS.*", "", raw_text)) |>
+    mutate(date = str_remove(date, "\\((.*?)\\)")) |>
+    select(-raw_text)
 
-  comment_data[-1, ]
 
+  comment_data
 }
