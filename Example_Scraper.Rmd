@@ -13,20 +13,15 @@ knitr::opts_chunk$set(echo = TRUE)
 devtools::load_all()
 ```
 
-
-
-
 ```{r}
 index <- GetFandomIndex("Fantastic Beasts and Where to Find Them (Movies)", 690, start = 351)
 
 # full: 690
 ```
 
-
 ```{r}
 save(index, file = "next_index_350.rdata")
 ```
-
 
 ```{r}
 load("index_350")
@@ -35,7 +30,6 @@ test1 <- index
 load("next_index_350")
 test2 <- index
 ```
-
 
 ```{r}
 full_index <- rbind(test1, test2)
@@ -46,6 +40,7 @@ save(full_index, file = "full_index.rdata")
 ```
 
 # Works Info
+
 ```{r}
 output <- list()
 
@@ -66,9 +61,8 @@ for (i in max(length(output), 1):nrow(full_index)){
 save(output, file = "full_worksinfo.rdata")
 ```
 
-
-
 # Chapter Info
+
 ```{r}
 load("full_index.rdata")
 load("full_worksinfo.rdata")
@@ -118,17 +112,17 @@ GetDownloadURL <- function(input) {
 download_url <- GetDownloadURL("https://archiveofourown.org/works/23429491")
 ```
 
-
 ```{r}
 html <- get_html(WorkInfoURL("https://archiveofourown.org/works/35276581/chapters/87914224")) 
 ```
-https://archiveofourown.org/works/35276581/chapters/87914224
 
-https://archiveofourown.org/works/28082433
+<https://archiveofourown.org/works/35276581/chapters/87914224>
+
+<https://archiveofourown.org/works/28082433>
+
 ```{r}
 html
 ```
-
 
 ```{r}
 html |>
@@ -144,10 +138,10 @@ html |>
   html_attrs() |>
   as.character()
 ```
-//*[@id="main"]/div[2]/ul/li[6]/ul
-//*[@id="main"]/div[2]/ul
 
-#main > div.work > ul > li.download > ul
+//[@id*="main"*]*/div[2]/ul/li[6]/ul //*[@id="main"]/div[2]/ul
+
+#main \> div.work \> ul \> li.download \> ul
 
 ```{r}
   get_html("https://archiveofourown.org/works/23429491?view_adult=true") |>
@@ -155,7 +149,7 @@ html |>
   html_text2()
 ```
 
-https://archiveofourown.org/downloads/28082433.html/fighting%20for%20a%20lifestyle.html
+<https://archiveofourown.org/downloads/28082433.html/fighting%20for%20a%20lifestyle.html>
 
 ```{r}
 story_text <- get_html(download_url) |>
@@ -169,7 +163,6 @@ chapter_index
 ```{r}
 story_text
 ```
-
 
 ```{r}
 for (i in 1:(nrow(chapter_index) - 1)){
@@ -194,8 +187,6 @@ test <- str_match(story_text, regex) |>
 }
 ```
 
-
-
 ```{r}
 str_match(story_text, "(?s)\\n\\nRight and Wrong Lessons\\n\\n(.*?)\\n\\nGood Grief\\n\\n") |>
   (\(x) x[,2])() |>
@@ -206,9 +197,6 @@ str_match(story_text, "(?s)\\n\\nRight and Wrong Lessons\\n\\n(.*?)\\n\\nGood Gr
 ```{r}
 head(output, 1)
 ```
-
-
-
 
 ```{r}
 workurls <- names(output)
@@ -280,30 +268,30 @@ for (i in max(length(author_names), 1):length(workurls)){
 
 ```
 
-
 ```{r}
 names(output)[13623]
 ```
+
 ```{r}
 #author_names[[13623]] <- "Work Deleted"
 ```
-
 
 # Get Author Info
 
 ```{r}
 head(author_names)
 ```
+
 ```{r}
 names(author_names)[1]
 
 length(author_names[1])
 author_names[[1]]
 ```
+
 ```{r}
 author_info <- list()
 ```
-
 
 ```{r}
 for (i in max(length(author_info), 1):length(author_names)) {
@@ -368,7 +356,6 @@ for (i in max(length(author_info), 1):length(author_names)) {
 }
 ```
 
-
 ```{r}
 save(author_names, file = "author_names.rdata")
 ```
@@ -426,15 +413,14 @@ x_author <- 12505
 #names(author_info)[x_author]
 #author_info[[x_author]] <- "Work Deleted"
 ```
+
 ```{r}
 save(chapter_text, file = "chapter_text.rdata")
 ```
 
-
 ```{r}
 identical(chapter_text[[1]], character(0))
 ```
-
 
 ```{r}
 testlink <- "https://archiveofourown.org/works/27433657?view_full_work=true"
@@ -464,9 +450,6 @@ chapter_page |>
   html_text2()
 ```
 
-
-
 ```{r}
 chapter_text["https://archiveofourown.org/works/36216010"]
 ```
-
