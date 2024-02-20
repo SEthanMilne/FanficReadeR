@@ -1,0 +1,146 @@
+---
+title: "JKR AO3"
+format: html
+---
+
+# Libraries
+
+```{r}
+library(tidyverse)
+library(FanficReadeR)
+```
+
+# Basic Work Info
+
+## Search for Index of Qualifying Works
+
+```{r}
+search_output <- GetSearchIndex("Harry Potter - J. K. Rowling", 
+                                pages=20000, start=1, 
+                                date_from="2020-05-26",
+                                date_to="2020-06-25", complete="")
+```
+
+## Get Basic Work Info
+
+```{r}
+work_info <- list()
+
+for (i in (length(work_info)+1):nrow(search_output)){
+  link <- search_output[i,1]
+  work_info[[link]] <- GetWorkInfo(link)
+}
+
+work_info <- do.call(rbind, work_info) |>
+  rownames_to_column() |>
+  rename(
+    link = rowname
+  )
+```
+
+# Chapter Info
+
+## Get Work Chapter Index
+
+```{r}
+chapter_info <- list()
+
+for (i in (length(chapter_info)+1):nrow(search_output)){
+  link <- search_output[i,1]
+  chapter_info[[link]] <- GetChapterIndex(link)
+}
+
+chapter_info <- do.call(rbind, chapter_info) |>
+  rownames_to_column() |>
+  rename(
+    link = rowname
+  )
+```
+
+## Get Work Chapter Text
+
+```{r}
+chapter_links <- chapter_info$chapter_links
+
+chapter_text <- list()
+
+for (i in (length(chapter_text) + 1):length(chapter_links)) {
+  link <- chapter_links[i]
+  chapter_text[[link]] <- GetChapterText(link)
+  }
+
+chapter_text <- do.call(rbind, chapter_text) |>
+  rownames_to_column() |>
+  rename( 
+    chapter_links = rowname
+  )
+```
+
+## Get Basic Author Info
+
+```{r}
+authors <- work_info$author |>
+  unique()
+
+author_info <- list()
+
+for (i in (length(author_info) + 1):length(authors)) {
+  author <- authors[i]
+  author_info[[author]] <- GetAuthorInfo(author)
+  }
+
+author_info <- do.call(rbind, author_info)
+```
+
+## Author Works
+
+```{r}
+filtered_authors <- author_info |>
+  select(c(name, works_url, works_count)) |>
+  na.omit() #get rid of orphan accounts
+
+author_workspages <- filtered_authors$works_url
+author_workscount <- filtered_authors$works_count
+
+author_works <- list()
+
+for (i in (length(author_works) + 1):length(author_workspages)){
+  author_workspage <- author_workspages[i]
+  author_workspagecount <- ceiling(author_workscount[i]/20)
+  
+  works_temp <- list()
+  
+  for (j in 1:author_workspagecount){
+    works_temp[[j]] <- GetAuthorWorks(paste0(author_workspage, "?page=",j))
+  }
+  
+  if (length(works_temp) == 1){
+    author_works[[author_workspage]] <- works_temp[[1]]
+  } else {
+    author_works[[author_workspage]] <- do.call(rbind, works_temp)
+  }
+  
+}
+
+author_works <- do.call(rbind, author_works)
+```
+
+# Comments
+
+```{r}
+work_link <- work_info$link
+work_comments <- work_info$comments
+
+comments_list <- list()
+
+for (i in (length(comments_list) + 1):length(work_link)) {
+  
+  if (work_comments[i] == 0) {
+    next
+  }
+  
+  comments_list[[work_link[i]]] <- GetComments(work_link[i])
+}
+
+comments_list <- do.call(rbind, comments_list)
+```

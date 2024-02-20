@@ -82,44 +82,7 @@ Unless you're trying to gather large quantities of data, this shouldn't matter a
 
 ## Examples
 
-I have decided not to display an example of the functions working on GitHub, as that may violate the privacy of some random AO3 user. Included in this repository are two .rmd documents - `AuthorInfoTest.rmd` and `WorksInfoTest.rmd` - which contain versions of the functions you can modify for yourself, as well as some basic tests of the function that show how to call them using real users. I have, however, written down some example function calls for your reference.
-
-### Basic Call Examples
-
-``` r
-GetAuthorAll("SEthanMilne")
-# GetAuthorAll("https://archiveofourown.org/users/SEthanMilne") ## Links can be used too
-
-GetChapterIndex("https://archiveofourown.org/works/XXXXX") ## Work Link
-# GetChapterIndex("https://archiveofourown.org/works/XXXXX/chapters/XXXXX") ## Chapter Link
-
-GetComments("https://archiveofourown.org/works/XXXXX", keep.text = FALSE, excl.author = TRUE) ## Work Link
-# GetComments("https://archiveofourown.org/works/XXXXX/chapters/XXXXX") ## Chapter Link
-
-GetFandomIndex("Fantastic Beasts and Where to Find Them (Movies)", 3) ## gets 3 pages of index results
-```
-
-### Advanced Call Examples
-
-A more complex use case of these functions might be scraping all comments received by an author, using both the AuthorInfo data AND comments data. I've done this myself on a set of users (to make sure this package worked at all), and an anonymized version of that code can be found below:
-
-``` r
-works <- GetAuthorWorks("SEthanMilne") ## Get a df of all works
-
-urls <- works$work_url ## extract a vector of URLs from the above call
-work_name <- works$Titles ## Extract a vector of work names from the above call
-
-all_comments <- list()
-
-for (i in 1:length(urls)){
-
-    ## Generate a list of all works by an author and associated comments
-
-    all_comments[[i]] <- GetComments(urls[i], keep.text = FALSE, excl.author = TRUE) %>%
-                    mutate(work = work_name[i]) ## add a column for the work name
-
-}
-```
+See `example_scrape.qmd` for a functioning scraper workflow that gets data on \~3,000 Harry Potter fanfictions, as well as associated comment sections and authors.
 
 ## Future roadmap
 
