@@ -83,11 +83,11 @@ GetWorkInfo <- function(input) {
     work_info$last_updated <- work_info$published
   }
 
-  work_info$status <- stats |>
-    html_elements(xpath = '//dd[@class="chapters"]') |>
-    html_text2() |>
-    str_detect(fixed("/?")) |>
-    ifelse("incomplete", "ongoing")
+  if("completed" %in% stats_elements){
+    work_info$status <- "complete"
+  } else {
+    work_info$status <- "ongoing"
+  }
 
 
   if("bookmarks" %in% stats_elements){
