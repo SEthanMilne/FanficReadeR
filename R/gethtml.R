@@ -1,7 +1,8 @@
 # Downloads HTML page
 get_html <- function(input){
 
-  rpm_delay_alt()
+  #rpm_delay_alt()
+  Sys.sleep(5.5)
 
   GET(
     input,

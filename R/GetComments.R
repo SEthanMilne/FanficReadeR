@@ -1,109 +1,91 @@
-GetComments <- function (input) {
+GetComments <- function(link) {
 
-  ### Placeholder DF to store results
-  comment_data <- matrix(ncol = 4, nrow = 1) |>
-    data.frame() |>
-    rename(
-      user = X1,
-      chapter = X2,
-      date = X3,
-      text = X4
-    )
+  temp_commentdf <- list()
 
+  work_page <- get_html(paste0(link, "?view_full_work=true"))
 
-  for (i in 1:1000) {
-    url <- CommentURL(input, i)
-    comm <- get_html(url)
+  stats <- work_page |>
+    html_elements(css = ".stats dl dd")
 
-    if (comm |>
-        html_element(xpath = '//*[@id="feedback"]/p') |>
-        html_text2() |>
-        is.na() != TRUE){
-      return(0)
-    }
+  stats_elements <- stats |>
+    html_attrs() |>
+    unlist()
 
-
-    comments <- comm |>
-      html_elements(css = "ol li") |>
+  if("comments" %in% stats_elements){
+    comment_number <- stats |>
+      html_elements(xpath = '//dd[@class="comments"]') |>
       html_text2() |>
-      data.frame()
-
-    names(comments) <- "comments"
-
-    if (0 ==
-        comments |>
-        filter(grepl("on Chapter", comments)) |>
-        nrow()) {
-      break
-    } else {
-
-      names(comments) <- "comments"
-
-      ### Extracts user, chapter, date, and text of comment
-      comments <- comments |>
-        filter(grepl("on Chapter", comments)) |>
-        mutate(user = comments_getuser(comments)) |>
-        mutate(chapter = comments_getchapter(comments)) |>
-        mutate(date = comments_getdate(comments, chapter)) |>
-        mutate(text = comments_gettext(comments,date)) |>
-        select(-comments) |>
-        distinct(text, .keep_all = TRUE) ### Removes duplicates
+      str_replace(fixed(","), "") |>
+      as.numeric()
+  } else {
+    return(NA)
+  }
+  comment_pages <- ceiling(comment_number / 20) #only 20 comments per page
 
 
-      comment_data <- rbind(comment_data, comments)
+  comment_path <- work_page |>
+    html_element("#show_comments_link a") |>
+    html_attr("href") |>
+    str_replace("hide_comments", "show_comments") #weird AO3 error
+
+  temp_commentcount <- 0
+
+  for (j in 1:comment_pages) {
+    comment_url <-
+      paste0("https://archiveofourown.org",
+             comment_path,
+             "&page=",
+             j)
+
+    comment_page <- get_html(comment_url)
+
+    byline <- comment_page |>
+      html_elements(".byline") |>
+      html_text2() |>
+      (\(x) x[2:length(x)])()
+
+    date <- comment_page |>
+      html_elements(".datetime") |>
+      html_text2() |>
+      (\(x) x[!str_detect(x, 'Last Edited')])()
+
+    if (identical(date, character(0))){
+      break #date being blank means no more comments -- end loop early
     }
+
+    comments <- comment_page |>
+      html_elements(xpath = '//*[@id="comments_placeholder"]//*[contains(@class, "userstuff")]') |>
+      html_text2()
+
+    comments_df <- cbind(byline, date) |>
+      cbind(comments) |>
+      data.frame() |>
+      rename(author = byline,
+             comment = comments) |>
+      mutate(
+        author = str_remove(author, date),
+        author = str_remove(author, fixed("(orphan_account)")),
+        comment = str_replace_all(comment, fixed("\n"), " "),
+        date = gsub("^.{4}", "", date),
+        date = anydate(date)
+      ) |>
+      mutate(
+        chapter = ifelse(
+          str_detect(author, "on Chapter"),
+          str_extract(author, "on Chapter (\\d)+ "),
+          "on Chapter 1"
+        ),
+        author = str_remove(author, paste0(" ", chapter)),
+        chapter = str_remove(chapter, "on Chapter "),
+        chapter = as.numeric(chapter)
+      )
+
+    temp_commentdf[[j]] <- comments_df
+
+    temp_commentcount <- temp_commentcount + nrow(comments_df)
+    if (temp_commentcount == comment_number)
+    {break} #AO3 sometimes has >20 comments per page for unknown reason
   }
 
-
-  comment_data <- comment_data[-1, ] #|>
-
-  comment_data
-
-}
-
-
-
-
-GetComments_1chap <- function(input) {
-  id <- sub(".*https://archiveofourown.org/works/", "", input)
-  comment_url <-
-    paste0("https://archiveofourown.org/comments/show_comments?work_id=",
-           id)
-  comm <- get_html(comment_url)
-
-  comment_text <- comm |>
-    html_element(xpath = '//*[@id="outer"]') |>
-    html_element(xpath = '//*[@id="inner"]') |>
-    html_element(xpath = '//*[@id="main"]') |>
-    html_element(xpath = '//*[@id="feedback"]') |>
-    html_element(xpath = '//*[@id="comments_placeholder"]') |>
-    html_text2()
-
-  if (comment_text == ""){
-    return("Comments Hidden")
-  }
-
-  comment_text <- gsub("Parent Thread\n", "", comment_text)
-  comment_text <- gsub("(Previous comment deleted.)\n\n", "", comment_text)
-
-  comment_df <-
-    strsplits(comment_text, "\n\nComment Actions\nReply\nThread\n") |>
-    data.frame()
-
-  names(comment_df) <- "raw_text"
-
-  comment_data <- comment_df |>
-    (\(x) slice(x, 1:(n() - 1)))() |>
-    mutate(raw_text = str_remove(raw_text, "\\(Previous comment deleted.\\)\\n\\n")) |>
-    mutate(raw_text = str_remove(raw_text, "\\n\\((.*?)this thread\\)\\n\\n")) |>
-    mutate(user = gsub(" .*$", "", raw_text)) |>
-    mutate(text = sub(".*\\n\\n", "", raw_text)) |>
-    mutate(raw_text = str_remove(raw_text, fixed(user))) |>
-    mutate(raw_text = str_replace(raw_text, "\\n\\n", " COMMENTSTARTS ")) |>
-    mutate(date = sub("COMMENTSTARTS.*", "", raw_text)) |>
-    mutate(date = str_remove(date, "\\((.*?)\\)")) |>
-    select(-raw_text)
-
-
-  comment_data
+  do.call(rbind, temp_commentdf)
 }

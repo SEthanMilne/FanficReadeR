@@ -1,7 +1,7 @@
 Package: FanficReadeR
 Type: Package
 Title: Gather Data from AO3
-Version: 0.1.0
+Version: 1.0
 Author: Ethan Milne
 Maintainer: Ethan Milne <emilne.phd@ivey.ca>
 Description: Scrapes data from AO3.
