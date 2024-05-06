@@ -13,13 +13,13 @@ GetWorkInfo <- function(input) {
 
   work_info$title <- work |>
     html_elements(".heading") |>
-    html_text2() |>
-    (\(x) x[5])()
+    html_elements(xpath = "//h2[@class='title heading']") |>
+    html_text2()
 
   work_info$author <- work |>
     html_elements(".heading") |>
-    html_text2() |>
-    (\(x) x[6])()
+    html_elements(xpath = "//h3[@class='byline heading']") |>
+    html_text2()
 
   work_info$word_count <- stats |>
     html_elements(xpath = '//dd[@class="words"]') |>
