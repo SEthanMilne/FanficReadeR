@@ -111,7 +111,6 @@ GetWorkInfo <- function(input) {
     work_info$collections <- NA
   }
 
-
   work_info$relationships <- work |>
     html_element(css = ".relationship .commas") |>
     html_text2() |>
@@ -147,33 +146,15 @@ GetWorkInfo <- function(input) {
 
 
 
+GetMultipleWorkInfo <- function(workurl_df){
 
+  author_works_info <- list()
 
+  for (i in (1:nrow(workurl_df))) {
+    link <- workurl_df$work_urls[i]
+    author_works_info[[link]] <- GetWorkInfo(link)
+  }
+  author_works_info <- bind_rows(author_works_info, .id = "works_url")
 
-GetWorkInfo_old <- function(input) {
-  link <- WorkInfoURL(input)
-  work <- get_html(link)
-
-  raw_text <- work |>
-    html_element(css = ".group") |>
-    html_text2()
-
-  work_info <- data.frame(matrix(nrow = 1, ncol = 0))
-  work_info$word_count <- get_wordcount(raw_text)
-  work_info$language <- get_language(raw_text)
-  work_info$chapters <- get_chapters(raw_text)
-  work_info$kudos <- get_kudos(raw_text)
-  work_info$comments <- get_comments(raw_text)
-  work_info$hits <- get_hits(raw_text)
-  work_info$last_updated <- get_lastupdated(raw_text)
-  work_info$completed <- get_completed(raw_text)
-  work_info$published <- get_published(raw_text)
-  work_info$status <- get_status(raw_text)
-  work_info$bookmarks <- get_bookmarks(raw_text)
-  work_info$relationships <- get_relationships(raw_text)
-  work_info$warnings <- get_warnings(raw_text)
-  work_info$age_category <- get_agecategory(raw_text)
-  work_info$fandoms <- get_fandoms(raw_text)
-
-  return(work_info)
+  author_works_info
 }
