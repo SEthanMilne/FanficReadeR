@@ -10,7 +10,7 @@ GetChapterIndex <- function(input) {
 
   colnames(chapter_info) <- "title"
 
-  end <- nrow(chapter_info)
+  end <- nrow(chapter_info) - 1
   chapter_info <- chapter_info[2:end, 1] |>
     data.frame()
 
